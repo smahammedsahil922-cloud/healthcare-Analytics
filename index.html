@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Healthcare Analytics Project</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --navy:   #0a1628;
+      --blue:   #1a3a6b;
+      --teal:   #0d9488;
+      --cyan:   #22d3ee;
+      --white:  #f0f6ff;
+      --muted:  #8ba3c7;
+      --card:   #111e35;
+      --border: rgba(34,211,238,0.15);
+      --green:  #10b981;
+      --amber:  #f59e0b;
+      --red:    #ef4444;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--navy);
+      color: var(--white);
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 300;
+      line-height: 1.7;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background-image:
+        linear-gradient(rgba(34,211,238,0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(34,211,238,0.04) 1px, transparent 1px);
+      background-size: 60px 60px;
+      pointer-events: none; z-index: 0;
+    }
+
+    .blob { position: fixed; border-radius: 50%; filter: blur(120px); opacity: 0.18; pointer-events: none; z-index: 0; }
+    .blob-1 { width: 600px; height: 600px; background: #1a3a6b; top: -200px; left: -200px; }
+    .blob-2 { width: 500px; height: 500px; background: #0d9488; bottom: -150px; right: -150px; }
+    .blob-3 { width: 300px; height: 300px; background: #22d3ee; top: 40%; left: 50%; transform: translate(-50%,-50%); opacity: 0.08; }
+
+    /* NAV */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 1.2rem 4rem;
+      background: rgba(10,22,40,0.85);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+      z-index: 100;
+    }
+    .nav-logo { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.1rem; color: var(--cyan); letter-spacing: 0.05em; }
+    .nav-links { display: flex; gap: 2.5rem; }
+    .nav-links a { color: var(--muted); text-decoration: none; font-size: 0.88rem; font-weight: 400; letter-spacing: 0.05em; text-transform: uppercase; transition: color 0.2s; }
+    .nav-links a:hover { color: var(--cyan); }
+
+    section { position: relative; z-index: 1; }
+
+    /* HERO */
+    #hero { min-height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: flex-start; padding: 8rem 4rem 5rem; max-width: 1100px; margin: 0 auto; }
+    .hero-tag { display: inline-flex; align-items: center; gap: 0.5rem; background: rgba(13,148,136,0.15); border: 1px solid rgba(13,148,136,0.4); color: var(--teal); font-size: 0.78rem; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; padding: 0.4rem 1rem; border-radius: 100px; margin-bottom: 2rem; animation: fadeUp 0.6s ease both; }
+    .hero-tag::before { content: '●'; font-size: 0.5rem; color: var(--teal); animation: pulse 2s infinite; }
+
+    h1 { font-family: 'Syne', sans-serif; font-size: clamp(2.8rem, 6vw, 5.5rem); font-weight: 800; line-height: 1.05; letter-spacing: -0.02em; animation: fadeUp 0.7s 0.1s ease both; }
+    h1 span { color: var(--cyan); }
+
+    .hero-sub { max-width: 580px; margin-top: 1.5rem; color: var(--muted); font-size: 1.05rem; animation: fadeUp 0.7s 0.2s ease both; }
+
+    .hero-btns { display: flex; gap: 1rem; margin-top: 2.5rem; flex-wrap: wrap; animation: fadeUp 0.7s 0.3s ease both; }
+    .btn { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.85rem 1.8rem; border-radius: 8px; font-family: 'DM Sans', sans-serif; font-size: 0.9rem; font-weight: 500; text-decoration: none; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; border: none; }
+    .btn:hover { transform: translateY(-2px); }
+    .btn-primary { background: var(--teal); color: #fff; box-shadow: 0 4px 24px rgba(13,148,136,0.35); }
+    .btn-primary:hover { box-shadow: 0 8px 32px rgba(13,148,136,0.5); }
+    .btn-outline { background: transparent; color: var(--white); border: 1px solid var(--border); }
+    .btn-outline:hover { border-color: var(--cyan); color: var(--cyan); }
+
+    /* KPI STRIP */
+    .stats-strip { display: grid; grid-template-columns: repeat(4,1fr); gap: 1px; background: var(--border); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; margin-top: 4rem; animation: fadeUp 0.7s 0.4s ease both; }
+    .stat-cell { background: var(--card); padding: 1.6rem 1.8rem; transition: background 0.2s; }
+    .stat-cell:hover { background: rgba(17,30,53,0.9); }
+    .stat-val { font-family: 'Syne', sans-serif; font-size: 2rem; font-weight: 800; color: var(--cyan); }
+    .stat-lbl { font-size: 0.8rem; color: var(--muted); margin-top: 0.2rem; letter-spacing: 0.03em; }
+    .stat-trend { font-size: 0.72rem; margin-top: 0.4rem; }
+    .trend-up { color: var(--green); }
+    .trend-down { color: var(--red); }
+
+    /* SECTION */
+    .section-wrap { max-width: 1100px; margin: 0 auto; padding: 5rem 4rem; }
+    .section-label { font-size: 0.75rem; color: var(--teal); letter-spacing: 0.15em; text-transform: uppercase; font-weight: 500; margin-bottom: 0.8rem; }
+    h2 { font-family: 'Syne', sans-serif; font-size: clamp(1.8rem, 3vw, 2.6rem); font-weight: 700; line-height: 1.15; margin-bottom: 1rem; }
+    h2 span { color: var(--cyan); }
+    .section-desc { color: var(--muted); max-width: 560px; font-size: 0.95rem; }
+
+    /* FEATURE CARDS */
+    .cards-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 1.2rem; margin-top: 3rem; }
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 1.8rem; transition: border-color 0.25s, transform 0.25s; }
+    .card:hover { border-color: rgba(34,211,238,0.4); transform: translateY(-4px); }
+    .card-icon { width: 44px; height: 44px; border-radius: 10px; background: rgba(13,148,136,0.15); border: 1px solid rgba(13,148,136,0.3); display: flex; align-items: center; justify-content: center; font-size: 1.2rem; margin-bottom: 1.2rem; }
+    .card h3 { font-family: 'Syne', sans-serif; font-size: 1rem; font-weight: 700; margin-bottom: 0.5rem; }
+    .card p { font-size: 0.87rem; color: var(--muted); }
+
+    /* ── LIVE DASHBOARD ── */
+    #dashboard { background: rgba(17,30,53,0.5); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+    .dash-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-top: 2.5rem; }
+    .dash-card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 1.5rem; }
+    .dash-card h4 { font-family: 'Syne', sans-serif; font-size: 0.9rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 1.2rem; }
+
+    /* Mini bar chart */
+    .bar-chart { display: flex; flex-direction: column; gap: 0.75rem; }
+    .bar-row { display: flex; align-items: center; gap: 0.8rem; }
+    .bar-label { font-size: 0.82rem; color: var(--white); min-width: 110px; }
+    .bar-track { flex: 1; height: 8px; background: rgba(255,255,255,0.07); border-radius: 100px; overflow: hidden; }
+    .bar-fill { height: 100%; border-radius: 100px; transition: width 1.2s cubic-bezier(0.16,1,0.3,1); width: 0; }
+    .bar-val { font-size: 0.78rem; color: var(--muted); min-width: 60px; text-align: right; }
+
+    /* Donut chart */
+    .donut-wrap { display: flex; align-items: center; gap: 1.5rem; }
+    .donut-svg { flex-shrink: 0; }
+    .donut-legend { display: flex; flex-direction: column; gap: 0.6rem; }
+    .legend-item { display: flex; align-items: center; gap: 0.5rem; font-size: 0.82rem; }
+    .legend-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+
+    /* Sparkline area */
+    .sparkline-wrap { margin-top: 0.5rem; }
+    .spark-svg { width: 100%; height: 80px; }
+
+    /* Tabs */
+    .tabs { display: flex; gap: 0.4rem; margin-bottom: 1rem; }
+    .tab { padding: 0.4rem 1rem; border-radius: 8px; font-size: 0.82rem; font-weight: 500; border: 1px solid var(--border); background: transparent; color: var(--muted); cursor: pointer; transition: all 0.2s; }
+    .tab.active { background: rgba(13,148,136,0.2); border-color: var(--teal); color: var(--white); }
+    .tab:hover:not(.active) { border-color: rgba(34,211,238,0.3); color: var(--white); }
+
+    /* SHEETS TABLE */
+    .sheets-table { width: 100%; border-collapse: collapse; margin-top: 2.5rem; }
+    .sheets-table th { text-align: left; padding: 0.8rem 1.2rem; font-size: 0.75rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); border-bottom: 1px solid var(--border); }
+    .sheets-table td { padding: 1rem 1.2rem; font-size: 0.9rem; border-bottom: 1px solid rgba(34,211,238,0.06); }
+    .sheets-table tr:hover td { background: rgba(34,211,238,0.03); }
+    .badge { display: inline-block; padding: 0.25rem 0.7rem; border-radius: 100px; font-size: 0.72rem; font-weight: 500; }
+    .badge-teal  { background: rgba(13,148,136,0.15); color: var(--teal); }
+    .badge-cyan  { background: rgba(34,211,238,0.1);  color: var(--cyan); }
+    .badge-blue  { background: rgba(26,58,107,0.5);   color: #7cb4f4; }
+    .badge-amber { background: rgba(245,158,11,0.15); color: var(--amber); }
+
+    /* TECH */
+    .tech-row { display: flex; gap: 1rem; flex-wrap: wrap; margin-top: 2.5rem; }
+    .tech-pill { display: flex; align-items: center; gap: 0.6rem; background: var(--card); border: 1px solid var(--border); border-radius: 100px; padding: 0.55rem 1.2rem; font-size: 0.85rem; font-weight: 500; transition: border-color 0.2s; }
+    .tech-pill:hover { border-color: var(--cyan); }
+    .tech-pill .dot { width: 8px; height: 8px; border-radius: 50%; }
+
+    /* CTA */
+    #cta { text-align: center; padding: 6rem 4rem; background: linear-gradient(135deg, rgba(13,148,136,0.08), rgba(34,211,238,0.04)); border-top: 1px solid var(--border); }
+    #cta h2 { font-size: clamp(1.6rem, 3vw, 2.4rem); margin-bottom: 1rem; }
+    #cta p { color: var(--muted); margin-bottom: 2rem; }
+
+    footer { text-align: center; padding: 2rem; border-top: 1px solid var(--border); color: var(--muted); font-size: 0.8rem; position: relative; z-index: 1; }
+
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+    .reveal { opacity: 0; transform: translateY(30px); transition: opacity 0.6s ease, transform 0.6s ease; }
+    .reveal.visible { opacity: 1; transform: translateY(0); }
+
+    @media (max-width: 768px) {
+      nav { padding: 1rem 1.5rem; }
+      .nav-links { display: none; }
+      #hero, .section-wrap { padding-left: 1.5rem; padding-right: 1.5rem; }
+      .stats-strip { grid-template-columns: repeat(2,1fr); }
+      .cards-grid { grid-template-columns: 1fr; }
+      .dash-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="blob blob-1"></div>
+  <div class="blob blob-2"></div>
+  <div class="blob blob-3"></div>
+
+  <nav>
+    <div class="nav-logo">⚕ HealthAnalytics</div>
+    <div class="nav-links">
+      <a href="#features">Features</a>
+      <a href="#dashboard">Dashboard</a>
+      <a href="#sheets">Report</a>
+      <a href="#stack">Stack</a>
+      <a href="https://github.com/YOUR_USERNAME/healthcare-analysis" target="_blank">GitHub →</a>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <section id="hero">
+    <div class="hero-tag">Python · Excel · Data Analysis</div>
+    <h1>Healthcare<br/>Data <span>Analytics</span></h1>
+    <p class="hero-sub">
+      An end-to-end Python project that processes 500 patient records and auto-generates
+      a professional 7-sheet Excel report with KPIs, department performance,
+      insurance breakdowns, disease insights, monthly trends, and demographics.
+    </p>
+    <div class="hero-btns">
+      <a href="https://github.com/YOUR_USERNAME/healthcare-analysis" class="btn btn-primary" target="_blank">
+        ⬇ View on GitHub
+      </a>
+      <a href="#dashboard" class="btn btn-outline">Live Preview ↓</a>
+    </div>
+
+    <div class="stats-strip">
+      <div class="stat-cell">
+        <div class="stat-val" data-count="500" data-suffix="">0</div>
+        <div class="stat-lbl">Patient Records</div>
+        <div class="stat-trend trend-up">↑ 500 records processed</div>
+      </div>
+      <div class="stat-cell">
+        <div class="stat-val" data-count="7" data-suffix="">0</div>
+        <div class="stat-lbl">Excel Sheets</div>
+        <div class="stat-trend trend-up">↑ Fully formatted</div>
+      </div>
+      <div class="stat-cell">
+        <div class="stat-val" data-prefix="$" data-count="836760" data-format="currency">0</div>
+        <div class="stat-lbl">Net Profit</div>
+        <div class="stat-trend trend-up">↑ 37.3% margin</div>
+      </div>
+      <div class="stat-cell">
+        <div class="stat-val" data-count="53" data-suffix="%">0</div>
+        <div class="stat-lbl">Readmission Rate</div>
+        <div class="stat-trend trend-down">↓ Monitored monthly</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FEATURES -->
+  <section id="features">
+    <div class="section-wrap">
+      <p class="section-label reveal">What it does</p>
+      <h2 class="reveal">Built for <span>real insight</span></h2>
+      <p class="section-desc reveal">
+        Automated pipeline that reads raw CSV data, runs analysis, and outputs
+        a fully formatted, professional Excel report — no manual work needed.
+      </p>
+
+      <div class="cards-grid">
+        <div class="card reveal">
+          <div class="card-icon">📊</div>
+          <h3>KPI Dashboard</h3>
+          <p>Total revenue, cost, profit, average age, and readmission rate in one executive summary sheet.</p>
+        </div>
+        <div class="card reveal">
+          <div class="card-icon">🏥</div>
+          <h3>Department Analysis</h3>
+          <p>Compare Cardiology, Neurology, Pediatrics, Orthopedics, and General — by patients, cost, and profit.</p>
+        </div>
+        <div class="card reveal">
+          <div class="card-icon">💳</div>
+          <h3>Insurance Breakdown</h3>
+          <p>Medicare, Medicaid, Private, and Self-pay — average costs, revenue, and readmission rates per type.</p>
+        </div>
+        <div class="card reveal">
+          <div class="card-icon">🦠</div>
+          <h3>Disease Insights</h3>
+          <p>All 5 diseases ranked by patient volume with average treatment cost and revenue figures.</p>
+        </div>
+        <div class="card reveal">
+          <div class="card-icon">📈</div>
+          <h3>Monthly Trends</h3>
+          <p>17-month revenue and cost trend analysis with profit/loss colour-coding per period.</p>
+        </div>
+        <div class="card reveal">
+          <div class="card-icon">⚙️</div>
+          <h3>Fully Automated</h3>
+          <p>One command — <code style="background:rgba(34,211,238,0.1);padding:2px 6px;border-radius:4px;font-size:0.82rem">python healthcare_analysis.py</code> — generates the complete report instantly.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- LIVE DASHBOARD PREVIEW -->
+  <section id="dashboard">
+    <div class="section-wrap">
+      <p class="section-label reveal">Interactive Preview</p>
+      <h2 class="reveal">Live <span>Data Visualization</span></h2>
+      <p class="section-desc reveal">A live rendition of the data inside the generated Excel report.</p>
+
+      <div class="dash-grid reveal">
+        <!-- Department Revenue Bar Chart -->
+        <div class="dash-card">
+          <h4>Department Revenue</h4>
+          <div class="tabs" id="dept-tabs">
+            <button class="tab active" data-metric="revenue">Revenue</button>
+            <button class="tab" data-metric="cost">Cost</button>
+            <button class="tab" data-metric="profit">Profit</button>
+          </div>
+          <div class="bar-chart" id="dept-chart">
+            <!-- JS filled -->
+          </div>
+        </div>
+
+        <!-- Insurance Donut -->
+        <div class="dash-card">
+          <h4>Insurance Mix — Patients</h4>
+          <div class="donut-wrap">
+            <svg class="donut-svg" viewBox="0 0 120 120" width="120" height="120" id="donut-svg">
+              <!-- JS filled -->
+            </svg>
+            <div class="donut-legend" id="donut-legend"></div>
+          </div>
+        </div>
+
+        <!-- Monthly Sparkline -->
+        <div class="dash-card" style="grid-column: 1 / -1;">
+          <h4>Monthly Net Profit — Jan 2023 → May 2024</h4>
+          <div class="sparkline-wrap">
+            <svg class="spark-svg" id="spark-svg" viewBox="0 0 900 80" preserveAspectRatio="none"></svg>
+          </div>
+          <div style="display:flex;justify-content:space-between;margin-top:0.4rem;font-size:0.72rem;color:var(--muted)">
+            <span>Jan 2023</span><span>Jul 2023</span><span>Jan 2024</span><span>May 2024</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Disease table -->
+      <div class="dash-card reveal" style="margin-top:1.5rem;">
+        <h4>Disease Overview</h4>
+        <table style="width:100%;border-collapse:collapse;margin-top:0.5rem">
+          <thead>
+            <tr id="disease-head">
+              <th style="text-align:left;font-size:0.75rem;color:var(--muted);padding:0.5rem 0.75rem;border-bottom:1px solid var(--border);">Disease</th>
+              <th style="text-align:center;font-size:0.75rem;color:var(--muted);padding:0.5rem 0.75rem;border-bottom:1px solid var(--border);">Patients</th>
+              <th style="text-align:center;font-size:0.75rem;color:var(--muted);padding:0.5rem 0.75rem;border-bottom:1px solid var(--border);">Avg Age</th>
+              <th style="text-align:center;font-size:0.75rem;color:var(--muted);padding:0.5rem 0.75rem;border-bottom:1px solid var(--border);">Avg Cost</th>
+              <th style="text-align:center;font-size:0.75rem;color:var(--muted);padding:0.5rem 0.75rem;border-bottom:1px solid var(--border);">Avg Revenue</th>
+              <th style="text-align:center;font-size:0.75rem;color:var(--muted);padding:0.5rem 0.75rem;border-bottom:1px solid var(--border);">Readmission</th>
+            </tr>
+          </thead>
+          <tbody id="disease-body"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- SHEETS -->
+  <section id="sheets">
+    <div class="section-wrap" style="padding-top:2rem;">
+      <p class="section-label reveal">Excel Output</p>
+      <h2 class="reveal">7-Sheet <span>Report Structure</span></h2>
+      <table class="sheets-table reveal">
+        <thead><tr><th>#</th><th>Sheet Name</th><th>Contents</th><th>Type</th></tr></thead>
+        <tbody>
+          <tr>
+            <td style="color:var(--muted)">01</td>
+            <td><strong>📊 Executive Summary</strong></td>
+            <td>10 KPIs — revenue, cost, profit, readmission rate, avg age</td>
+            <td><span class="badge badge-cyan">Summary</span></td>
+          </tr>
+          <tr>
+            <td style="color:var(--muted)">02</td>
+            <td><strong>🏨 Department Analysis</strong></td>
+            <td>Per-department: patients, avg age, cost, revenue, profit, readmission</td>
+            <td><span class="badge badge-teal">Analytics</span></td>
+          </tr>
+          <tr>
+            <td style="color:var(--muted)">03</td>
+            <td><strong>🛡 Insurance Analysis</strong></td>
+            <td>Insurance type breakdown with avg cost, avg revenue, readmission rate</td>
+            <td><span class="badge badge-teal">Analytics</span></td>
+          </tr>
+          <tr>
+            <td style="color:var(--muted)">04</td>
+            <td><strong>🦠 Disease Analysis</strong></td>
+            <td>All 5 diseases by patient count with cost and revenue breakdown</td>
+            <td><span class="badge badge-teal">Analytics</span></td>
+          </tr>
+          <tr>
+            <td style="color:var(--muted)">05</td>
+            <td><strong>📈 Monthly Trends</strong></td>
+            <td>17-month visit, revenue, cost, and profit trends with colour coding</td>
+            <td><span class="badge badge-amber">Trends</span></td>
+          </tr>
+          <tr>
+            <td style="color:var(--muted)">06</td>
+            <td><strong>👥 Demographics</strong></td>
+            <td>Gender split + age group breakdown with revenue and cost per group</td>
+            <td><span class="badge badge-blue">Demographics</span></td>
+          </tr>
+          <tr>
+            <td style="color:var(--muted)">07</td>
+            <td><strong>📋 Raw Data</strong></td>
+            <td>Full cleaned dataset — all 500 records, 12 columns incl. profit</td>
+            <td><span class="badge badge-blue">Data</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- TECH STACK -->
+  <section id="stack">
+    <div class="section-wrap" style="padding-top:2rem;">
+      <p class="section-label reveal">Technologies</p>
+      <h2 class="reveal">Built with <span>Python</span></h2>
+      <p class="section-desc reveal">Lightweight stack — no databases, no servers. Just Python and Excel.</p>
+      <div class="tech-row reveal">
+        <div class="tech-pill"><span class="dot" style="background:#3776ab"></span> Python 3.8+</div>
+        <div class="tech-pill"><span class="dot" style="background:#150458"></span> pandas</div>
+        <div class="tech-pill"><span class="dot" style="background:#21a366"></span> openpyxl</div>
+        <div class="tech-pill"><span class="dot" style="background:#f05033"></span> Git</div>
+        <div class="tech-pill"><span class="dot" style="background:#24292e"></span> GitHub</div>
+        <div class="tech-pill"><span class="dot" style="background:#0d9488"></span> GitHub Pages</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section id="cta">
+    <h2>Ready to explore the code?</h2>
+    <p>Clone the repo, run one command, and get your Excel report instantly.</p>
+    <div style="display:flex;gap:1rem;justify-content:center;flex-wrap:wrap">
+      <a href="https://github.com/YOUR_USERNAME/healthcare-analysis" class="btn btn-primary" target="_blank">View on GitHub →</a>
+      <a href="Healthcare_Analysis_Report.xlsx" class="btn btn-outline" download>⬇ Download Report (.xlsx)</a>
+    </div>
+  </section>
+
+  <footer>
+    Built with Python &amp; ❤️ &nbsp;·&nbsp; Healthcare Analytics Project &nbsp;·&nbsp;
+    <a href="https://github.com/YOUR_USERNAME/healthcare-analysis" style="color:var(--teal);text-decoration:none">GitHub</a>
+  </footer>
+
+  <script>
+  // ── DATA ────────────────────────────────────────────────────────────────────
+  const DEPT_DATA = {
+    revenue: [
+      { label: "Cardiology",   val: 487229, max: 490000 },
+      { label: "Neurology",    val: 459200, max: 490000 },
+      { label: "Orthopedics",  val: 445916, max: 490000 },
+      { label: "General",      val: 432551, max: 490000 },
+      { label: "Pediatrics",   val: 418251, max: 490000 },
+    ],
+    cost: [
+      { label: "Neurology",    val: 319416, max: 320000 },
+      { label: "Orthopedics",  val: 295668, max: 320000 },
+      { label: "Cardiology",   val: 288492, max: 320000 },
+      { label: "General",      val: 255793, max: 320000 },
+      { label: "Pediatrics",   val: 247018, max: 320000 },
+    ],
+    profit: [
+      { label: "Cardiology",   val: 198737, max: 210000 },
+      { label: "General",      val: 176758, max: 210000 },
+      { label: "Pediatrics",   val: 171233, max: 210000 },
+      { label: "Orthopedics",  val: 150248, max: 210000 },
+      { label: "Neurology",    val: 139784, max: 210000 },
+    ],
+  };
+
+  const INS_DATA = [
+    { label: "Private",  val: 135, color: "#22d3ee" },
+    { label: "Medicaid", val: 130, color: "#0d9488" },
+    { label: "Self-pay", val: 124, color: "#1a3a6b" },
+    { label: "Medicare", val: 111, color: "#7cb4f4" },
+  ];
+
+  const MONTHLY_PROFIT = [47631,38280,52530,55691,27315,62954,45213,38811,64286,58679,64826,67123,72426,37372,55084,41515,7024];
+
+  const DISEASE_DATA = [
+    { name: "Infection",     patients: 107, age: 39.2, cost: 2785, rev: 4493, readm: 48.6 },
+    { name: "Back Pain",     patients: 103, age: 42.2, cost: 2834, rev: 4509, readm: 50.5 },
+    { name: "Diabetes",      patients:  98, age: 45.6, cost: 2832, rev: 4593, readm: 54.1 },
+    { name: "Hypertension",  patients:  98, age: 45.3, cost: 2866, rev: 4323, readm: 59.2 },
+    { name: "Asthma",        patients:  94, age: 43.0, cost: 2744, rev: 4513, readm: 53.2 },
+  ];
+
+  // ── COUNTER ANIMATION ───────────────────────────────────────────────────────
+  function animateCount(el) {
+    const target = +el.dataset.count;
+    const format = el.dataset.format;
+    const prefix = el.dataset.prefix || "";
+    const suffix = el.dataset.suffix || "";
+    const dur = 1400;
+    const start = performance.now();
+    function tick(now) {
+      const t = Math.min((now - start) / dur, 1);
+      const ease = 1 - Math.pow(1 - t, 3);
+      const cur = Math.round(target * ease);
+      if (format === "currency") {
+        el.textContent = prefix + (cur >= 1000000
+          ? "$" + (cur/1000000).toFixed(1) + "M"
+          : "$" + cur.toLocaleString());
+      } else {
+        el.textContent = prefix + cur.toLocaleString() + suffix;
+      }
+      if (t < 1) requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(tick);
+  }
+
+  // ── BAR CHART ───────────────────────────────────────────────────────────────
+  const COLORS_BAR = { revenue: "#22d3ee", cost: "#ef4444", profit: "#10b981" };
+
+  function renderBars(metric) {
+    const data = DEPT_DATA[metric];
+    const container = document.getElementById("dept-chart");
+    container.innerHTML = data.map(d => `
+      <div class="bar-row">
+        <span class="bar-label">${d.label}</span>
+        <div class="bar-track">
+          <div class="bar-fill" style="background:${COLORS_BAR[metric]};width:${(d.val/d.max*100).toFixed(1)}%"></div>
+        </div>
+        <span class="bar-val">$${(d.val/1000).toFixed(0)}k</span>
+      </div>
+    `).join("");
+    // Reset widths and animate
+    const fills = container.querySelectorAll(".bar-fill");
+    fills.forEach(f => { const w = f.style.width; f.style.width = "0"; setTimeout(() => f.style.width = w, 50); });
+  }
+
+  document.getElementById("dept-tabs").addEventListener("click", e => {
+    if (!e.target.dataset.metric) return;
+    document.querySelectorAll("#dept-tabs .tab").forEach(t => t.classList.remove("active"));
+    e.target.classList.add("active");
+    renderBars(e.target.dataset.metric);
+  });
+  renderBars("revenue");
+
+  // ── DONUT CHART ─────────────────────────────────────────────────────────────
+  (function buildDonut() {
+    const svg = document.getElementById("donut-svg");
+    const legend = document.getElementById("donut-legend");
+    const total = INS_DATA.reduce((a, d) => a + d.val, 0);
+    const cx = 60, cy = 60, r = 45, strokeW = 16;
+    const circ = 2 * Math.PI * r;
+    let offset = 0;
+
+    INS_DATA.forEach((d, i) => {
+      const pct = d.val / total;
+      const dash = circ * pct;
+      const gap  = circ - dash;
+      const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+      circle.setAttribute("cx", cx); circle.setAttribute("cy", cy); circle.setAttribute("r", r);
+      circle.setAttribute("fill", "none");
+      circle.setAttribute("stroke", d.color);
+      circle.setAttribute("stroke-width", strokeW);
+      circle.setAttribute("stroke-dasharray", `${dash} ${gap}`);
+      circle.setAttribute("stroke-dashoffset", -offset);
+      circle.setAttribute("transform", `rotate(-90 ${cx} ${cy})`);
+      circle.style.transition = `stroke-dashoffset 0.5s ease ${i * 0.1}s`;
+      svg.appendChild(circle);
+      offset += dash;
+
+      // Legend
+      const li = document.createElement("div");
+      li.className = "legend-item";
+      li.innerHTML = `<span class="legend-dot" style="background:${d.color}"></span>${d.label}: <strong style="color:${d.color};margin-left:auto;padding-left:0.5rem">${d.val}</strong>`;
+      legend.appendChild(li);
+    });
+
+    // Center text
+    const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    text.setAttribute("x", cx); text.setAttribute("y", cy - 4);
+    text.setAttribute("text-anchor", "middle"); text.setAttribute("fill", "#f0f6ff");
+    text.setAttribute("font-size", "14"); text.setAttribute("font-weight", "700");
+    text.setAttribute("font-family", "Syne, sans-serif");
+    text.textContent = total;
+    svg.appendChild(text);
+
+    const sub = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    sub.setAttribute("x", cx); sub.setAttribute("y", cy + 12);
+    sub.setAttribute("text-anchor", "middle"); sub.setAttribute("fill", "#8ba3c7");
+    sub.setAttribute("font-size", "8");
+    sub.textContent = "patients";
+    svg.appendChild(sub);
+  })();
+
+  // ── SPARKLINE ───────────────────────────────────────────────────────────────
+  (function buildSparkline() {
+    const svg = document.getElementById("spark-svg");
+    const W = 900, H = 80, pad = 10;
+    const min = Math.min(...MONTHLY_PROFIT);
+    const max = Math.max(...MONTHLY_PROFIT);
+    const n = MONTHLY_PROFIT.length;
+
+    const pts = MONTHLY_PROFIT.map((v, i) => {
+      const x = pad + (i / (n-1)) * (W - 2*pad);
+      const y = pad + (1 - (v - min) / (max - min)) * (H - 2*pad);
+      return [x, y];
+    });
+
+    const linePath = "M " + pts.map(p => p.join(" ")).join(" L ");
+    const areaPath = linePath + ` L ${pts[pts.length-1][0]} ${H} L ${pts[0][0]} ${H} Z`;
+
+    const defs = document.createElementNS("http://www.w3.org/2000/svg","defs");
+    const grad = document.createElementNS("http://www.w3.org/2000/svg","linearGradient");
+    grad.id = "sparkGrad"; grad.setAttribute("x1","0"); grad.setAttribute("y1","0"); grad.setAttribute("x2","0"); grad.setAttribute("y2","1");
+    grad.innerHTML = `<stop offset="0%" stop-color="#22d3ee" stop-opacity="0.3"/><stop offset="100%" stop-color="#22d3ee" stop-opacity="0"/>`;
+    defs.appendChild(grad);
+    svg.appendChild(defs);
+
+    const area = document.createElementNS("http://www.w3.org/2000/svg","path");
+    area.setAttribute("d", areaPath);
+    area.setAttribute("fill","url(#sparkGrad)");
+    svg.appendChild(area);
+
+    const line = document.createElementNS("http://www.w3.org/2000/svg","path");
+    line.setAttribute("d", linePath);
+    line.setAttribute("fill","none");
+    line.setAttribute("stroke","#22d3ee");
+    line.setAttribute("stroke-width","2");
+    line.setAttribute("stroke-linejoin","round");
+    svg.appendChild(line);
+
+    // Dots for max/min
+    pts.forEach(([x,y],i) => {
+      const v = MONTHLY_PROFIT[i];
+      if (v === max || v === min) {
+        const circle = document.createElementNS("http://www.w3.org/2000/svg","circle");
+        circle.setAttribute("cx",x); circle.setAttribute("cy",y); circle.setAttribute("r","4");
+        circle.setAttribute("fill", v === max ? "#10b981" : "#ef4444");
+        circle.setAttribute("stroke","#0a1628"); circle.setAttribute("stroke-width","2");
+        svg.appendChild(circle);
+        const label = document.createElementNS("http://www.w3.org/2000/svg","text");
+        label.setAttribute("x",x); label.setAttribute("y", v === max ? y-8 : y+16);
+        label.setAttribute("text-anchor","middle"); label.setAttribute("fill", v === max ? "#10b981" : "#ef4444");
+        label.setAttribute("font-size","9"); label.setAttribute("font-family","DM Sans, sans-serif");
+        label.textContent = "$" + (v/1000).toFixed(0) + "k";
+        svg.appendChild(label);
+      }
+    });
+  })();
+
+  // ── DISEASE TABLE ───────────────────────────────────────────────────────────
+  (function buildDiseaseTable() {
+    const tbody = document.getElementById("disease-body");
+    tbody.innerHTML = DISEASE_DATA.map((d, i) => `
+      <tr>
+        <td style="padding:0.65rem 0.75rem;font-size:0.88rem;border-bottom:1px solid rgba(34,211,238,0.06)">${d.name}</td>
+        <td style="text-align:center;padding:0.65rem 0.75rem;font-size:0.88rem;border-bottom:1px solid rgba(34,211,238,0.06);color:var(--cyan);font-weight:500">${d.patients}</td>
+        <td style="text-align:center;padding:0.65rem 0.75rem;font-size:0.88rem;border-bottom:1px solid rgba(34,211,238,0.06)">${d.age}</td>
+        <td style="text-align:center;padding:0.65rem 0.75rem;font-size:0.88rem;border-bottom:1px solid rgba(34,211,238,0.06)">$${d.cost.toLocaleString()}</td>
+        <td style="text-align:center;padding:0.65rem 0.75rem;font-size:0.88rem;border-bottom:1px solid rgba(34,211,238,0.06)">$${d.rev.toLocaleString()}</td>
+        <td style="text-align:center;padding:0.65rem 0.75rem;font-size:0.88rem;border-bottom:1px solid rgba(34,211,238,0.06)">
+          <span style="background:rgba(${d.readm > 55 ? '239,68,68' : '13,148,136'},0.15);color:${d.readm > 55 ? '#ef4444' : '#0d9488'};padding:0.2rem 0.6rem;border-radius:100px;font-size:0.75rem">${d.readm}%</span>
+        </td>
+      </tr>
+    `).join("");
+  })();
+
+  // ── SCROLL REVEAL + COUNTER ──────────────────────────────────────────────────
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach((e, i) => {
+      if (e.isIntersecting) {
+        setTimeout(() => e.target.classList.add('visible'), i * 80);
+        // Counter
+        e.target.querySelectorAll && e.target.querySelectorAll("[data-count]").forEach(el => animateCount(el));
+        observer.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.1 });
+
+  document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+  // Hero counters on load
+  setTimeout(() => {
+    document.querySelectorAll('#hero [data-count]').forEach(el => animateCount(el));
+  }, 600);
+  </script>
+</body>
+</html>
